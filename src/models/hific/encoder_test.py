@@ -1,4 +1,3 @@
-import torch
 import torch.nn as nn
 
 from src.models.hific.normaliztion import channel_normalize, instance_normalize
@@ -17,14 +16,14 @@ class Encoder(nn.Module):
         to a feature tensor with the shape of (B, C, H/16, W/16)
         """
         super(Encoder, self).__init__()
-        # Get input_channels
+        # Init params
         self.in_channels = image_shape[0]  # image_shape in the format of (C, H, W)
+        self.num_down = num_down
         # out_channels for CNN layers, with base=60 [60, 120, 240, 480, 960]
         self.out_channels = [out_channels_base * 2 ** i for i in range(num_down + 1)]
         self.out_channels_bottleneck = out_channels_bottleneck
 
         # Init necessary layers
-
         # Normalization
         if channels_norm:
             interlayer_norm = channel_normalize
@@ -40,11 +39,11 @@ class Encoder(nn.Module):
         post_pad = nn.ReflectionPad2d(1)
 
         # Sequence of layers first_layer + num_down * down_sample_layers + last_layer
-        layers = []
+
         for i in range(0, num_down + 2):
             if i == 0:
                 # First layer does not down sample
-                layers.append(nn.Sequential(
+                self.add_module(f'conv_block{str(i)}', nn.Sequential(
                     pre_pad,
                     nn.Conv2d(self.in_channels, self.out_channels[i], kernel_size=7, stride=1),
                     interlayer_norm(input_channels=self.out_channels[i]),
@@ -52,13 +51,13 @@ class Encoder(nn.Module):
                 ))
             elif i == num_down+1:
                 # Last layer does not down sample
-                layers.append(nn.Sequential(
+                self.add_module(f'conv_block{str(i)}', nn.Sequential(
                     post_pad,
                     nn.Conv2d(self.out_channels[i-1], self.out_channels_bottleneck, kernel_size=3, stride=1)
                 ))
             else:
                 # Down-sampling layers (default 4 layers)
-                layers.append(nn.Sequential(
+                self.add_module(f'conv_block{str(i)}', nn.Sequential(
                     asymmetric_pad,
                     nn.Conv2d(
                         self.out_channels[i-1],
@@ -72,25 +71,19 @@ class Encoder(nn.Module):
                     activation_layer()
                 ))
 
-        self.net = nn.Sequential(*layers)
-
     def forward(self, x):
         """
         Extract feature map from input image by down-sampling through CNN layers
         :param x: input image with the shape of (B, C, H, W)
         :return: feature map with the shape of (B, C_bottleneck, H/16, W/16)
         """
-        out = self.net(x)
-        return out
+        for i in range(self.num_down+2):
+            conv_block = getattr(self, f'conv_block{str(i)}')
+            x = conv_block(x)
+        return x
 
 
 if __name__ == "__main__":
-    model = Encoder((3, 256, 256), num_down=4)
-    image = torch.randn((1, 3, 256, 256))
-    print(list(model.modules()))
-    print("Done\n\n ")
-    out_feature = model(image)
-    print(out_feature.size())
-
     from torchsummary import summary
-    summary(model, (3, 256, 256), batch_size=1, device="cpu")
+    model = Encoder((3, 768, 768), num_down=4)
+    summary(model, (3, 768, 768), batch_size=1, device="cpu")

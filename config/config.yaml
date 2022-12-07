@@ -1,0 +1,4 @@
+# Training config
+device: :
+# Encoder config
+image_shape: (
