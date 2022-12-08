@@ -83,7 +83,6 @@ class Generator(nn.Module):
             self.interlayer_norm = instance_normalize
 
         pre_pad = nn.ReflectionPad2d(1)
-        asymmetric_pad = nn.ReflectionPad2d(1)
         post_pad = nn.ReflectionPad2d(3)
 
         # First conv block does not up sample feature
@@ -110,12 +109,12 @@ class Generator(nn.Module):
         for i in range(self.num_up_sample):
             self.add_module(f'up_sample{str(i)}',
                             nn.Sequential(
-                                asymmetric_pad,
                                 nn.ConvTranspose2d(
                                     self.out_channels[i],
                                     self.out_channels[i+1],
                                     kernel_size=3,
                                     stride=2,
+                                    padding=1,
                                     output_padding=1
                                 ),
                                 self.interlayer_norm(self.out_channels[i+1]),
