@@ -2,4 +2,5 @@ torch
 torch-summary
 tqdm
 pyyaml
+scikit-image
 

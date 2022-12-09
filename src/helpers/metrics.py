@@ -4,6 +4,7 @@ import warnings
 import torch
 import torch.nn.functional as F
 
+
 def psnr(img1, img2, max_val=255.):
     """
     Based on `tf.image.psnr`
@@ -16,6 +17,7 @@ def psnr(img1, img2, max_val=255.):
     mse = np.mean(np.square(img1 - img2), axis=(1, 2, 3))
     psnr = 20 * np.log10(max_val) - 10 * np.log10(mse)
     return psnr
+
 
 def _fspecial_gauss_1d(size, sigma):
     r"""Create 1-D gauss kernel
@@ -38,7 +40,7 @@ def gaussian_filter(input, win):
     r""" Blur input with 1-D kernel
     Args:
         input (torch.Tensor): a batch of tensors to be blurred
-        window (torch.Tensor): 1-D gauss kernel
+        win (torch.Tensor): 1-D gauss kernel
     Returns:
         torch.Tensor: blurred tensors
     """
@@ -64,7 +66,6 @@ def gaussian_filter(input, win):
 
 
 def _ssim(X, Y, data_range, win, size_average=True, K=(0.01, 0.03)):
-
     r""" Calculate ssim index for X and Y
     Args:
         X (torch.Tensor): images
@@ -104,15 +105,15 @@ def _ssim(X, Y, data_range, win, size_average=True, K=(0.01, 0.03)):
 
 
 def ssim(
-    X,
-    Y,
-    data_range=255,
-    size_average=True,
-    win_size=11,
-    win_sigma=1.5,
-    win=None,
-    K=(0.01, 0.03),
-    nonnegative_ssim=False,
+        X,
+        Y,
+        data_range=255,
+        size_average=True,
+        win_size=11,
+        win_sigma=1.5,
+        win=None,
+        K=(0.01, 0.03),
+        nonnegative_ssim=False,
 ):
     r""" interface of ssim
     Args:
@@ -162,9 +163,8 @@ def ssim(
 
 
 def ms_ssim(
-    X, Y, data_range=255, size_average=True, win_size=11, win_sigma=1.5, win=None, weights=None, K=(0.01, 0.03)
+        X, Y, data_range=255, size_average=True, win_size=11, win_sigma=1.5, win=None, weights=None, K=(0.01, 0.03)
 ):
-
     r""" interface of ms-ssim
     Args:
         X (torch.Tensor): a batch of images, (N,C,[T,]H,W)
@@ -204,7 +204,7 @@ def ms_ssim(
 
     smaller_side = min(X.shape[-2:])
     assert smaller_side > (win_size - 1) * (
-        2 ** 4
+            2 ** 4
     ), "Image size should be larger than %d due to the 4 downsamplings in ms-ssim" % ((win_size - 1) * (2 ** 4))
 
     if weights is None:
@@ -217,6 +217,8 @@ def ms_ssim(
 
     levels = weights.shape[0]
     mcs = []
+    ssim_per_channel = None
+
     for i in range(levels):
         ssim_per_channel, cs = _ssim(X, Y, win=win, data_range=data_range, size_average=False, K=K)
 
@@ -238,15 +240,15 @@ def ms_ssim(
 
 class SSIM(torch.nn.Module):
     def __init__(
-        self,
-        data_range=255,
-        size_average=True,
-        win_size=11,
-        win_sigma=1.5,
-        channel=3,
-        spatial_dims=2,
-        K=(0.01, 0.03),
-        nonnegative_ssim=False,
+            self,
+            data_range=255,
+            size_average=True,
+            win_size=11,
+            win_sigma=1.5,
+            channel=3,
+            spatial_dims=2,
+            K=(0.01, 0.03),
+            nonnegative_ssim=False,
     ):
         r""" class for ssim
         Args:
@@ -281,15 +283,15 @@ class SSIM(torch.nn.Module):
 
 class MS_SSIM(torch.nn.Module):
     def __init__(
-        self,
-        data_range=255,
-        size_average=True,
-        win_size=11,
-        win_sigma=1.5,
-        channel=3,
-        spatial_dims=2,
-        weights=None,
-        K=(0.01, 0.03),
+            self,
+            data_range=255,
+            size_average=True,
+            win_size=11,
+            win_sigma=1.5,
+            channel=3,
+            spatial_dims=2,
+            weights=None,
+            K=(0.01, 0.03),
     ):
         r""" class for ms-ssim
         Args:
