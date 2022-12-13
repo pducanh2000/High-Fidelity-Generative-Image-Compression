@@ -1,5 +1,21 @@
 import torch
 
+
+class ModelTypes(object):
+    COMPRESSION = 'compression'
+    COMPRESSION_GAN = 'compression_gan'
+
+
+class ModelModes(object):
+    TRAINING = 'training'
+    VALIDATION = 'validation'
+    EVALUATION = 'evaluation'  # actual entropy coding
+
+
+class DatasetPaths(object):
+    VIMEO = 'data/vimeo_interp_test/'
+
+
 hyper_params = {
     # Path
 
