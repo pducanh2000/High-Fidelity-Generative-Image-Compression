@@ -20,7 +20,7 @@ class BaseModel(object):
         self.use_gpu = use_gpu
         self.gpu_ids = list(gpu_ids)
 
-    def forward(self):
+    def forward(self, in0, in1, return_per_layer=False):
         pass
 
     def get_images_path(self):
@@ -35,7 +35,7 @@ class BaseModel(object):
     def get_current_errors(self):
         pass
 
-    def save(self, label):
+    def save(self, path, label):
         pass
 
     def save_network(self, network, save_folder, network_label, epoch_label):

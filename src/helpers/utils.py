@@ -410,5 +410,3 @@ def save_images(writer, step, real, decoded, fname):
     imgs = torch.cat((real, decoded), dim=0)
     save_image(imgs, fname, nrow=4, normalize=True, scale_each=True)
     writer.add_images('gen_recon', imgs, step)
-
-

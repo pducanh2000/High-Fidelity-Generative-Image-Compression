@@ -6,7 +6,7 @@ from torch.autograd import Variable
 
 from src.loss.perceptual_similarity import pretrained_networks as pretrained
 from src.loss.perceptual_similarity.utils import normalize_tensor, spatial_average, upsample, tensor2tensorlab, \
-    tensor2np, l2
+    tensor2np, l2, tensor2im, dssim
 
 
 class ScalingLayer(nn.Module):
@@ -151,7 +151,7 @@ class FakeNet(nn.Module):
 
 
 class L2(FakeNet):
-    def forward(self, in0, in1):
+    def forward(self, in0, in1, return_per_layer=False):
         assert (in0.size()[0] == 1)  # currently only supports batchSize 1
 
         if self.colorspace == 'RGB':
@@ -167,3 +167,27 @@ class L2(FakeNet):
                 ret_var = ret_var.cuda()
 
             return ret_var
+
+
+class DSSIM(FakeNet):
+    def forward(self, in0, in1, return_per_layer=False):
+        # Only support with batch size = 1
+        assert in0.size()[0] == 1
+
+        # Init the return values
+        value = None
+
+        # Calculate the return values
+        if self.colorspace == "RGB":
+            value = dssim(1. * tensor2im(in0), 1.0 * tensor2im(in1), data_range=255.0).astype("float")
+        elif self.colorspace == "Lab":
+            value = dssim(
+                tensor2np(tensor2tensorlab(in0.data, to_norm=False)),
+                tensor2np(tensor2tensorlab(in1.data, to_norm=False)),
+                data_range=100
+            ).astype("Float")
+
+        ret_var = Variable(torch.Tensor((value,)))
+        if self.use_gpu:
+            ret_var = ret_var.cuda()
+        return ret_var
