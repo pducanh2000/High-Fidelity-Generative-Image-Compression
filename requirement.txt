@@ -3,4 +3,4 @@ torch-summary
 tqdm
 pyyaml
 scikit-image
-
+autograd
