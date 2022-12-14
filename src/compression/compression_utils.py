@@ -182,6 +182,9 @@ def ans_compress(symbols, indices, cdf, cdf_length, cdf_offset, coding_shape,
 
 def ans_decompress(encoded, indices, cdf, cdf_length, cdf_offset, coding_shape,
                    precision, vectorize=False, block_decode=True):
+    # Quick fix but not sure - Danny
+    batch_shape = len(encoded)
+
     if vectorize is True:  # Inputs must be identically shaped
 
         decoded = entropy_coding.vec_ans_index_decoder(

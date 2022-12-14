@@ -1,18 +1,11 @@
-import os
-import abc
 import glob
-import math
 import logging
-import numpy as np
+import os
 
-from skimage.io import imread
 import PIL
-from tqdm import tqdm
-
 import torch
 from torch.utils.data import Dataset, DataLoader
-from torchvision import transforms, datasets
-
+from torchvision import transforms
 
 DIR = os.path.abspath(os.path.dirname(__file__))
 COLOUR_BLACK = 0
@@ -39,6 +32,7 @@ class BaseDataset(Dataset):
     def __init__(self, root, transforms_list=[], mode='train', logger=logging.getLogger(__name__),
                  **kwargs):
         self.root = root
+        self.imgs = None
 
         try:
             self.train_data = os.path.join(root, self.files["train"])
@@ -76,8 +70,9 @@ class Evaluation(BaseDataset):
     root : string
         Root directory of dataset.
     """
+
     def __init__(self, root=os.path.join(DIR, "data"), normalize=False, **kwargs):
-        super(Evaluation, self).__init__()
+        super(Evaluation, self).__init__(root=root, transforms_list=[transforms.ToTensor()], **kwargs)
 
         self.imgs = glob.glob(os.path.join(root, "*.jpg"))
         self.imgs += glob.glob(os.path.join(root, "*.png"))
@@ -96,6 +91,30 @@ class Evaluation(BaseDataset):
             ]
         return transforms.Compose(transforms_list)
 
+    def __getitem__(self, item):
+        img_path = self.imgs[item]
+        filename = os.path.splitext(os.path.basename(img_path))[0]
+        filesize = os.path.getsize(img_path)
+        try:
+            img = PIL.Image.open(img_path)
+            img = img.convert('RGB')
+            W, H = img.size  # slightly confusing
+            bpp = filesize * 8. / (H * W)
+
+            transformation = self._transforms()
+            transformed = transformation(img)
+        except:
+            print('Error reading input images!')
+            return None
+
+        return transformed, bpp, filename
+
+
+class KodakDataset(BaseDataset):
+    def __init__(self):
+        pass
+
+    
 def get_dataset(dataset):
     """Return the correct dataset."""
     dataset = dataset.lower()
@@ -124,22 +143,14 @@ def get_dataloader(dataset, mode="train", root=None, shuffle=True, pin_memory=Tr
                    logger=logging.getLogger(__name__), normalize=False, **kwargs):
     """
     A generic data loader
-        Parameters
-        ----------
-        dataset : {"openimages", "jetimages", "evaluation"}
-            Name of the dataset to load
-        root : str
-            Path to the dataset root. If `None` uses the default one.
-        kwargs :
-            Additional arguments to `DataLoader`. Default values are modified.
     """
 
-    pin_memory = pin_memory and torch.cuda.is_available()   # Only set pin_memory True if GPU is available
+    pin_memory = pin_memory and torch.cuda.is_available()  # Only set pin_memory True if GPU is available
 
     if root is None:
-        dataset = Dataset(logger=logger, mode=mode, normalize=normalize, **kwargs)
+        dataset = dataset(logger=logger, mode=mode, normalize=normalize, **kwargs)
     else:
-        dataset = Dataset(root=root, logger=logger, mode=mode, normalize=normalize, **kwargs)
+        dataset = dataset(root=root, logger=logger, mode=mode, normalize=normalize, **kwargs)
 
     return DataLoader(dataset,
                       batch_size=batch_size,
@@ -148,6 +159,7 @@ def get_dataloader(dataset, mode="train", root=None, shuffle=True, pin_memory=Tr
                       collate_fn=exception_collate_fn,
                       pin_memory=pin_memory
                       )
+
 
 if __name__ == "__main__":
     pass
