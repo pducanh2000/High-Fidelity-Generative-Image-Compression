@@ -123,7 +123,7 @@ class HyperpriorEntropyModel(entropy_models.ContinuousEntropyModel):
         n_pixels = np.prod(spatial_shape)
 
         log_likelihood = torch.log(likelihood + EPS)
-        n_bits = torch.sum(log_likelihood) / (quotient)
+        n_bits = torch.sum(log_likelihood) / quotient
         bpi = n_bits / batch_size
         bpp = n_bits / n_pixels
 
@@ -152,16 +152,16 @@ class HyperpriorEntropyModel(entropy_models.ContinuousEntropyModel):
         encoded:        Tensor of the same shape as `bottleneck` containing the 
                         compressed message.
         """
-        input_shape = tuple(bottleneck.size())
+        input_shape = tuple(bottleneck.size())       # Hyperlatents (B, C, H/64, H/64)
         batch_shape = input_shape[0]
-        coding_shape = input_shape[1:]
-        broadcast_shape = input_shape[2:]
+        coding_shape = input_shape[1:]               # (C, H/64, W/64)
+        broadcast_shape = input_shape[2:]            # (H/64, W/64)
 
-        indices = self.compute_indices(broadcast_shape)
+        indices = self.compute_indices(broadcast_shape)     # (C, H/64, W/64)
 
         if len(indices.size()) < 4:
-            indices = indices.unsqueeze(0)
-            indices = torch.repeat_interleave(indices, repeats=batch_shape, dim=0)
+            indices = indices.unsqueeze(0)                  # (1, C, H/64, W/64)
+            indices = torch.repeat_interleave(indices, repeats=batch_shape, dim=0)  # (B, C, H/64, W/64)
 
         symbols = torch.floor(bottleneck + 0.5).to(torch.int32)
         rounded = symbols.clone()
@@ -308,7 +308,7 @@ class HyperpriorDensity(nn.Module):
             torch.Tensor - shape `(C, 1, *)`.
         """
         logits = x
-
+        # print("Logits input shape: {}".format(logits.size()))  # (n_channels, 1, * = BxHxW)
         for k in range(len(self.filters) + 1):
             H_k = getattr(self, 'H_{}'.format(str(k)))  # Weight
             a_k = getattr(self, 'a_{}'.format(str(k)))  # Scale
@@ -317,6 +317,7 @@ class HyperpriorDensity(nn.Module):
             if update_parameters is False:
                 H_k, a_k, b_k = H_k.detach(), a_k.detach(), b_k.detach()
             logits = torch.bmm(F.softplus(H_k), logits)  # [C,filters[k+1],*]
+            # print("Logits input shape: {}".format(logits.size()))     # (C, filters[k+1], *)
             logits = logits + b_k
             logits = logits + torch.tanh(a_k) * torch.tanh(logits)
 
@@ -348,17 +349,16 @@ class HyperpriorDensity(nn.Module):
         Expected input: (N,C,H,W)
         """
         latents = x
-
         # Converts latents to (C,1,*) format
 
         if collapsed_format is False:
             N, C, H, W = latents.size()
-            latents = latents.permute(1, 0, 2, 3)
+            latents = latents.permute(1, 0, 2, 3)       # (C, N, H, W)
             shape = latents.shape
-            latents = torch.reshape(latents, (shape[0], 1, -1))
+            latents = torch.reshape(latents, (shape[0], 1, -1))     # (C, 1, N x H x W)
 
-        cdf_upper = self.cdf_logits(latents + 0.5)
-        cdf_lower = self.cdf_logits(latents - 0.5)
+        cdf_upper = self.cdf_logits(latents + 0.5)                  # (C, 1, N x H x W)
+        cdf_lower = self.cdf_logits(latents - 0.5)                  # (C, 1, N x H x W)
 
         # Numerical stability using some sigmoid identities
         # to avoid subtraction of two numbers close to 1
@@ -375,8 +375,8 @@ class HyperpriorDensity(nn.Module):
             return likelihood_
 
         # Reshape to (N,C,H,W)
-        likelihood_ = torch.reshape(likelihood_, shape)
-        likelihood_ = likelihood_.permute(1, 0, 2, 3)
+        likelihood_ = torch.reshape(likelihood_, shape)         # (C, N, H, W)
+        likelihood_ = likelihood_.permute(1, 0, 2, 3)           # (C, N, H, W)
 
         return likelihood_
 

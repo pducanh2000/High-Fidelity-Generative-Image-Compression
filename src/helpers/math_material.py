@@ -38,7 +38,7 @@ def pmf_to_quantized_cdf(pmf, precision, careful=True):
 
     for i in range(cdf.size(0) - 1):
 
-        if (cdf[i] == cdf[i + 1]):
+        if cdf[i] == cdf[i + 1]:
             # Steal frequency from low-frequency symbols
             best_freq = target_total + 1
             best_steal = -1
@@ -46,13 +46,13 @@ def pmf_to_quantized_cdf(pmf, precision, careful=True):
             for j in range(cdf.size(0) - 1):
                 freq = cdf[j + 1] - cdf[j]
 
-                if (freq > 1 and freq < best_freq):
+                if freq > 1 and freq < best_freq:
                     best_freq = freq
                     best_steal = j
 
             assert best_steal != -1
 
-            if (best_steal < i):
+            if best_steal < i:
                 for j in range(best_steal + 1, i + 1):
                     cdf[j] -= 1
             else:

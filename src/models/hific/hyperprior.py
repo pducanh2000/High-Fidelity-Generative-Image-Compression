@@ -21,7 +21,7 @@ HyperInfo = namedtuple(
     "latent_nbpp hyperlatent_nbpp total_nbpp latent_qbpp hyperlatent_qbpp total_qbpp",
 )
 
-CompressionOut = namedtuple(
+CompressionOutput = namedtuple(
     "CompressionOutput",
     [
         "hyperlatents_encoded",
@@ -40,8 +40,8 @@ CompressionOut = namedtuple(
     ]
 )
 
-lower_bound_indentity = math_material.LowerBoundIdentity.apply
-lower_bound_toward = math_material.LowerBoundIdentity.aplly
+lower_bound_identity = math_material.LowerBoundIdentity.apply
+lower_bound_toward = math_material.LowerBoundToward.apply
 
 
 class CodingModel(nn.Module):
@@ -184,6 +184,72 @@ class Hyperprior(CodingModel):
             self.index_tables = self.prior_entropy_model.scale_table_tensor
             self.vectorize_encoding = vectorize_encoding
             self.block_encode = block_encode
+
+    def compress_forward(self, latents, spatial_shape, **kwargs):
+
+        # Obtain hyperlatents from hyperencoder
+        # Latents is a tensor with the shape of (B, bottleneck=220, H/16, W/16)
+        hyperlatents = self.analysis_net(latents)           # (B, hyperlatent_filters, H/64, H/64)
+        hyperlatent_spatial_shape = hyperlatents.size()[2:]     # (H/64 , H/64)
+        batch_shape = latents.size(0)
+
+        # Estimate Shannon entropies for hyperlatents
+        hyp_agg = self.hyperprior_entropy_model._estimate_compression_bits(
+            hyperlatents, spatial_shape)
+        hyperlatent_bits, hyperlatent_bpp, hyperlatent_bpi = hyp_agg       # n_bits, n_bits/n_pixels, n_bits/batch_size
+
+        # Compress, then decompress hyperlatents
+        hyperlatents_encoded, hyper_coding_shape, _ = self.hyperprior_entropy_model.compress(
+            hyperlatents,     # (B, C, H/64, W/64)
+            vectorize=self.vectorize_encoding,
+            block_encode=self.block_encode
+        )
+        hyperlatents_decoded, _ = self.hyperprior_entropy_model.decompress(
+            hyperlatents_encoded,
+            batch_shape=batch_shape,
+            broadcast_shape=hyperlatent_spatial_shape,
+            coding_shape=hyper_coding_shape,
+            vectorize=self.vectorize_encoding,
+            block_decode=self.block_encode
+        )
+        hyperlatents_decoded = hyperlatents_decoded.to(latents)
+
+        # Recover latent statistics from compressed hyperlatents
+        latent_means = self.synthesis_mu(hyperlatents_decoded)
+        latent_scales = self.synthesis_std(hyperlatents_decoded)
+        latent_scales = lower_bound_toward(latent_scales, self.scale_lower_bound)
+
+        # Use latent statistics to build indexed probability tables, and compress latents
+        latents_encoded, latent_coding_shape, _ = self.prior_entropy_model.compress(latents, means=latent_means,
+                                                                                    scales=latent_scales,
+                                                                                    vectorize=self.vectorize_encoding,
+                                                                                    block_encode=self.block_encode)
+
+        print("Latents_encoded: {}".format(latents_encoded.size()))
+        # Estimate Shannon entropies for latents
+        latent_agg = self.prior_entropy_model._estimate_compression_bits(latents,
+                                                                         means=latent_means, scales=latent_scales,
+                                                                         spatial_shape=spatial_shape)
+        latent_bits, latent_bpp, latent_bpi = latent_agg
+
+        # What the decoder needs for reconstruction
+        compression_output = CompressionOutput(
+            hyperlatents_encoded=hyperlatents_encoded,
+            latents_encoded=latents_encoded,
+            hyperlatent_spatial_shape=hyperlatent_spatial_shape,  # 2D
+            spatial_shape=spatial_shape,  # 2D
+            hyper_coding_shape=hyper_coding_shape,  # C,H,W
+            latent_coding_shape=latent_coding_shape,  # C,H,W
+            batch_shape=batch_shape,
+            hyperlatent_bits=hyperlatent_bits.item(),  # for reporting
+            latent_bits=latent_bits.item(),
+            total_bits=(hyperlatent_bits + latent_bits).item(),
+            hyperlatent_bpp=hyperlatent_bpp.item(),
+            latent_bpp=latent_bpp.item(),
+            total_bpp=(hyperlatent_bpp + latent_bpp).item(),
+        )
+
+        return compression_output
 
 
 
