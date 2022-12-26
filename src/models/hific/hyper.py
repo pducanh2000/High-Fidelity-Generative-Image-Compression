@@ -21,7 +21,7 @@ def get_num_mixtures(K_agg, C, params=('mu', 'scale', 'mix')):
 def unpack_likelihood_params(x, conv_out, log_scales_min):
     N, C, H, W = x.shape
     K_agg = conv_out.shape[1]
-
+    # print(conv_out.size())
     K = get_num_mixtures(K_agg, C)
 
     # For each channel: K pi / K mu / K sigma
@@ -95,9 +95,9 @@ class HyperpriorSynthesis(nn.Module):
         return x
 
 
-class HyperiorSynthesisDLMM(nn.Module):
+class HyperpriorSynthesisDLMM(nn.Module):
     def __init__(self, C=64, N=320, activation="relu", final_activation=None):
-        super(HyperiorSynthesisDLMM, self).__init__()
+        super(HyperpriorSynthesisDLMM, self).__init__()
         self.activation = getattr(f, activation)
         self.final_activation = None
         if final_activation:
@@ -106,7 +106,7 @@ class HyperiorSynthesisDLMM(nn.Module):
         self.conv1 = nn.ConvTranspose2d(N, N, kernel_size=5, stride=2, padding=2, output_padding=1)
         self.conv2 = nn.ConvTranspose2d(N, N, kernel_size=5, stride=2, padding=2, output_padding=1)
         self.conv3 = nn.ConvTranspose2d(N, C, kernel_size=3, stride=1, padding=1)
-        self.conv_out = nn.Conv2d(C, get_num_DLMM_channels(C), kernel_size=3, stride=1)
+        self.conv_out = nn.Conv2d(C, get_num_DLMM_channels(C), kernel_size=1, stride=1)
 
     def forward(self, x):
         x = self.activation(self.conv1(x))
