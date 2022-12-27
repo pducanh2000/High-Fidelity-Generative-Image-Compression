@@ -184,7 +184,7 @@ def save_model(model, optimizers, mean_epoch_loss, epoch, device, args, logger, 
 def load_model(save_path, logger, device, model_type=None, model_mode=None, current_args_d=None, prediction=True,
                strict=False, silent=False):
     start_time = time.time()
-    from src.models.hific.model import Model
+    from src.models.hific.model import HIFICModel
     checkpoint = torch.load(save_path)
     loaded_args_d = checkpoint['args']
 
@@ -226,7 +226,7 @@ def load_model(save_path, logger, device, model_type=None, model_mode=None, curr
         args.sample_noise = False
         args.noise_dim = 0
 
-    model = Model(args, logger, model_type=model_type, model_mode=model_mode)
+    model = HIFICModel(args, logger, model_type=model_type, model_mode=model_mode)
 
     # `strict` False if warmstarting
     model.load_state_dict(checkpoint['model_state_dict'], strict=strict)

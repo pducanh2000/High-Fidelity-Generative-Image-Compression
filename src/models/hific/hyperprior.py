@@ -162,7 +162,7 @@ class Hyperprior(CodingModel):
         self.synthesis_mu = synthesis_net(C=bottleneck_capacity, N=hyperlatent_filters)
         self.synthesis_std = synthesis_net(C=bottleneck_capacity, N=hyperlatent_filters)
 
-        self.amorization_model = [self.analysis_net, self.synthesis_mu, self.synthesis_std]
+        self.amortization_model = [self.analysis_net, self.synthesis_mu, self.synthesis_std]
         self.hyperlatent_likelihood = hyperprior_model.HyperpriorDensity(n_channels=hyperlatent_filters)
 
         if likelihood_type == "gaussian":
@@ -363,7 +363,7 @@ class HyperpriorDLMM(CodingModel):
         # TODO: Combine scale, loc into single network
         self.synthesis_DLMM_params = synthesis_net(C=bottleneck_capacity, N=hyperlatent_filters)
 
-        self.amortization_models = [self.analysis_net, self.synthesis_DLMM_params]
+        self.amortization_model = [self.analysis_net, self.synthesis_DLMM_params]
 
         self.hyperlatent_likelihood = hyperprior_model.HyperpriorDensity(n_channels=hyperlatent_filters)
 

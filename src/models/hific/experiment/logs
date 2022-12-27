@@ -1,0 +1,17 @@
+14:24:30 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:24:30 INFO - <module>: Using device cpu
+14:27:44 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:27:44 INFO - <module>: Using device cpu
+14:28:36 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:28:36 INFO - <module>: Using device cpu
+14:30:28 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:30:28 INFO - <module>: Using device cpu
+14:30:57 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:30:57 INFO - <module>: Using device cpu
+14:30:58 INFO - __init__: GAN mode enabled. Training discriminator for 1 steps.
+14:31:44 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:31:44 INFO - <module>: Using device cpu
+14:31:45 INFO - __init__: GAN mode enabled. Training discriminator for 1 steps.
+14:34:05 INFO - logger_setup: /home/pducanh/Desktop/High-Fidelity-Generative-Image-Compression/src
+14:34:05 INFO - <module>: Using device cpu
+14:34:06 INFO - __init__: GAN mode enabled. Training discriminator for 1 steps.

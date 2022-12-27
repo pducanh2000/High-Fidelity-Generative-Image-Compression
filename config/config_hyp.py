@@ -29,6 +29,7 @@ class args(object):
     """
     name = "hific"
     silent = True
+    num_down = 4
     n_epochs = 8
     n_steps = 1e6
     batch_size = 8

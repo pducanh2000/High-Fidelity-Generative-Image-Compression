@@ -58,17 +58,17 @@ class PNetLin(nn.Module):
 
         self.net = net_type(pretrained=not self.pnet_rand, requires_grad=self.pnet_tune)
 
-        if self.lpips:
-            self.lin0 = NetLinLayer(self.chns[0], use_dropout=use_dropout)
-            self.lin1 = NetLinLayer(self.chns[1], use_dropout=use_dropout)
-            self.lin2 = NetLinLayer(self.chns[2], use_dropout=use_dropout)
-            self.lin3 = NetLinLayer(self.chns[3], use_dropout=use_dropout)
-            self.lin4 = NetLinLayer(self.chns[4], use_dropout=use_dropout)
+        if self.lipips:
+            self.lin0 = NetLinLayer(self.channels[0], use_dropout=use_dropout)
+            self.lin1 = NetLinLayer(self.channels[1], use_dropout=use_dropout)
+            self.lin2 = NetLinLayer(self.channels[2], use_dropout=use_dropout)
+            self.lin3 = NetLinLayer(self.channels[3], use_dropout=use_dropout)
+            self.lin4 = NetLinLayer(self.channels[4], use_dropout=use_dropout)
             self.lins = [self.lin0, self.lin1, self.lin2, self.lin3, self.lin4]
             if self.pnet_type == 'squeeze':
                 # 7 layers for squeezenet
-                self.lin5 = NetLinLayer(self.chns[5], use_dropout=use_dropout)
-                self.lin6 = NetLinLayer(self.chns[6], use_dropout=use_dropout)
+                self.lin5 = NetLinLayer(self.channels[5], use_dropout=use_dropout)
+                self.lin6 = NetLinLayer(self.channels[6], use_dropout=use_dropout)
                 self.lins += [self.lin5, self.lin6]
 
     def forward(self, in0, in1, return_per_layer=False):
