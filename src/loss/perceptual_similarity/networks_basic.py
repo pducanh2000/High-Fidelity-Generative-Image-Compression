@@ -82,7 +82,7 @@ class PNetLin(nn.Module):
             diffs[i] = (features_0[i] - features_1[i]) ** 2  # list of tensors, size: (B, self.channels[i], H', W')
 
         # res is a list of feature maps
-        if self.lpips:
+        if self.lipips:
             if self.spatial:
                 # list of tensors shape (B, 1, in0.shape[2], in0.shape[3])
                 res = [upsample(self.lins[kk].model(diffs[kk]), out_HW=in0.shape[2:]) for kk in range(self.L)]

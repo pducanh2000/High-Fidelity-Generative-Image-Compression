@@ -33,7 +33,7 @@ class DistModel(BaseModel):
     def initialize(self, model='net-lin', net='alex', colorspace='Lab', pnet_rand=False, pnet_tune=False,
                    model_path=None, use_gpu=True, printNet=False, spatial=False, is_train=False, lr=.0001, beta1=0.5,
                    gpu_ids=(0,)):
-        BaseModel.initialize(self, use_gpu=True, gpu_ids=gpu_ids)
+        BaseModel.initialize(self, use_gpu=use_gpu, gpu_ids=gpu_ids)
 
         self.model = model
         self.name = "%s_[%s]" % (self.model, self.net)
@@ -59,12 +59,13 @@ class DistModel(BaseModel):
                 model_path = os.path.abspath(
                     os.path.join(inspect.getfile(self.initialize), "..", "weights/%s.pth" % self.net)
                 )
-            if not self.is_train:
-                print("Loading model from model path: {}".format(model_path))
-                if not use_gpu:
-                    self.network_base.load_state_dict(torch.load(model_path, map_location="cpu"))
-                else:
-                    self.network_base.load_state_dict(torch.load(model_path))
+            elif model_path:
+                if not self.is_train:
+                    print("Loading model from model path: {}".format(model_path))
+                    if not use_gpu:
+                        self.network_base.load_state_dict(torch.load(model_path, map_location="cpu"))
+                    else:
+                        self.network_base.load_state_dict(torch.load(model_path))
 
         elif self.model == "net":
             # Pretrained net

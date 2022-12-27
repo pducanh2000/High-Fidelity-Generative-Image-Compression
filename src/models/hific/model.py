@@ -160,7 +160,7 @@ class HIFICModel(nn.Module):
 
         # Pass through the Hyperprior encoder
         hyperinfo = self.Hyperprior(y, spatial_shape=y.size()[2:])
-        latents_quantized = hyperinfo.decode
+        latents_quantized = hyperinfo.decoded
         total_nbpp = hyperinfo.total_nbpp
         total_qbpp = hyperinfo.total_qbpp
 
@@ -221,40 +221,40 @@ class HIFICModel(nn.Module):
             x_real = (x_real + 1.0) / 2
             x_gen = (x_gen + 1.0) / 2
 
-            distortion_loss = self.distortion_loss(x_gen=x_gen, x_real=x_real)
-            perceptual_loss = self.perceptual_loss(pred=x_gen, target=x_real, normalize=True)
+        distortion_loss = self.distortion_loss(x_gen=x_gen, x_real=x_real)
+        perceptual_loss = self.perceptual_loss(pred=x_gen, target=x_real, normalize=True)
 
-            weighted_distortion = self.args.k_M * distortion_loss
-            weighted_perceptual = self.args.k_P * perceptual_loss
+        weighted_distortion = self.args.k_M * distortion_loss
+        weighted_perceptual = self.args.k_P * perceptual_loss
 
-            # Adaptive rate penalty
-            weighted_rate, rate_penalty = losses.weighted_rate_loss(self.args, total_nbpp=intermediates.n_bpp,
-                                                                    total_qbpp=intermediates.q_bpp,
-                                                                    step_counter=self.step_counter,
-                                                                    ignore_schedule=self.args.ignore_schedule)
+        # Adaptive rate penalty
+        weighted_rate, rate_penalty = losses.weighted_rate_loss(self.args, total_nbpp=intermediates.n_bpp,
+                                                                total_qbpp=intermediates.q_bpp,
+                                                                step_counter=self.step_counter,
+                                                                ignore_schedule=self.args.ignore_schedule)
 
-            weighted_R_D_loss = weighted_rate + weighted_distortion
-            weighted_compression_loss = weighted_R_D_loss + weighted_perceptual
+        weighted_R_D_loss = weighted_rate + weighted_distortion
+        weighted_compression_loss = weighted_R_D_loss + weighted_perceptual
 
-            # Bookkeeping
-            if self.step_counter % self.log_interval == 1:
-                self.store_loss('rate_penalty', rate_penalty)
-                self.store_loss('distortion', distortion_loss.item())
-                self.store_loss('perceptual', perceptual_loss.item())
-                self.store_loss('n_rate', intermediates.n_bpp.item())
-                self.store_loss('q_rate', intermediates.q_bpp.item())
-                self.store_loss('n_rate_latent', hyperinfo.latent_nbpp.item())
-                self.store_loss('q_rate_latent', hyperinfo.latent_qbpp.item())
-                self.store_loss('n_rate_hyperlatent', hyperinfo.hyperlatent_nbpp.item())
-                self.store_loss('q_rate_hyperlatent', hyperinfo.hyperlatent_qbpp.item())
+        # Bookkeeping
+        if self.step_counter % self.log_interval == 1:
+            self.store_loss('rate_penalty', rate_penalty)
+            self.store_loss('distortion', distortion_loss.item())
+            self.store_loss('perceptual', perceptual_loss.item())
+            self.store_loss('n_rate', intermediates.n_bpp.item())
+            self.store_loss('q_rate', intermediates.q_bpp.item())
+            self.store_loss('n_rate_latent', hyperinfo.latent_nbpp.item())
+            self.store_loss('q_rate_latent', hyperinfo.latent_qbpp.item())
+            self.store_loss('n_rate_hyperlatent', hyperinfo.hyperlatent_nbpp.item())
+            self.store_loss('q_rate_hyperlatent', hyperinfo.hyperlatent_qbpp.item())
 
-                self.store_loss('weighted_rate', weighted_rate.item())
-                self.store_loss('weighted_distortion', weighted_distortion.item())
-                self.store_loss('weighted_perceptual', weighted_perceptual.item())
-                self.store_loss('weighted_R_D', weighted_R_D_loss.item())
-                self.store_loss('weighted_compression_loss_sans_G', weighted_compression_loss.item())
+            self.store_loss('weighted_rate', weighted_rate.item())
+            self.store_loss('weighted_distortion', weighted_distortion.item())
+            self.store_loss('weighted_perceptual', weighted_perceptual.item())
+            self.store_loss('weighted_R_D', weighted_R_D_loss.item())
+            self.store_loss('weighted_compression_loss_sans_G', weighted_compression_loss.item())
 
-            return weighted_compression_loss
+        return weighted_compression_loss
 
     def GAN_loss(self, intermediates, train_generator=False):
         """
@@ -359,7 +359,7 @@ class HIFICModel(nn.Module):
 
         return reconstruct
 
-    def forward(self, x, train_generator=False, return_intermediates=True, writeout=True):
+    def forward(self, x, train_generator=False, return_intermediates=False, writeout=True):
         self.writeout = writeout
         losses = dict()
 
@@ -387,6 +387,7 @@ class HIFICModel(nn.Module):
             # `train_generator` flag
             D_loss, G_loss = self.GAN_loss(intermediates, train_generator)
             weighted_G_loss = self.args.beta * G_loss
+
             compression_model_loss += weighted_G_loss
             losses['disc'] = D_loss
 
