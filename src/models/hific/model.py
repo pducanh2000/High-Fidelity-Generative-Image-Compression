@@ -413,7 +413,7 @@ if __name__ == '__main__':
     else:
         model_mode = ModelModes.TRAINING
 
-    logger = utils.logger_setup(logpath=os.path.join(directories.experiment, 'logs'),
+    logger = utils.logger_setup(logpath=os.path.join(directories.experiment, 'logs.txt'),
                                 filepath=os.path.abspath(os.path.join(__file__, "../../../")))
     device = utils.get_device()
     logger.info(f'Using device {device}')
