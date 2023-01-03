@@ -123,7 +123,7 @@ class KodakDataset(BaseDataset):
         self.normalize = normalize
 
     def _transform(self, scale, H, W):
-        transforms_list = self.transforms
+        transforms_list = [transforms.ToTensor()]
         if self.normalize:
             transforms_list = [
                 transforms.RandomHorizontalFlip(),
@@ -179,7 +179,7 @@ class VimeoDataset(BaseDataset):
         self.normalize = normalize
 
     def _transform(self, scale, H, W):
-        transforms_list = self.transforms
+        transforms_list = [transforms.ToTensor()]
         if self.normalize:
             transforms_list = [
                 transforms.RandomHorizontalFlip(),
@@ -262,10 +262,13 @@ def get_dataloader(dataset, train_mode=True, json_path=None, shuffle=True, pin_m
 
 
 if __name__ == "__main__":
-    train_vimeo_loader = get_dataloader(VimeoDataset, train_mode=True)
+    train_vimeo_loader = get_dataloader("vimeo", train_mode=True, normalize=True)
     print(f"{len(train_vimeo_loader)} train batches")
-    val_vimeo_loader = get_dataloader(VimeoDataset, train_mode=False)
+    val_vimeo_loader = get_dataloader("vimeo", train_mode=False, normalize=True)
     print(f"{len(val_vimeo_loader)} val batches")
 
-    test_kodak_loader = get_dataloader(KodakDataset)
+    test_kodak_loader = get_dataloader("kodak", normalize=True)
     print(f"{len(test_kodak_loader)} test batches")
+
+    for image, bpp in test_kodak_loader:
+        print("Test")
