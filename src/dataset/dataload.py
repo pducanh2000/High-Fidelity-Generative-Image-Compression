@@ -16,7 +16,8 @@ SCALE_MIN = 0.75
 SCALE_MAX = 0.95
 
 DATASETS_DICT = {"openimages": "OpenImages", "cityscapes": "CityScapes",
-                 "jetimages": "JetImages", "evaluation": "Evaluation"}
+                 "jetimages": "JetImages", "evaluation": "Evaluation",
+                 "kodak": "KodakDataset", "vimeo": "VimeoDataset"}
 DATASETS = list(DATASETS_DICT.keys())
 
 
@@ -116,7 +117,7 @@ class KodakDataset(BaseDataset):
             self.imgs = json.load(f)
 
         self.crop_size = crop_size
-        self.images_dim = (3, self.crop_size, self.crop_size)
+        self.image_dims = (3, self.crop_size, self.crop_size)
         self.scale_min = SCALE_MIN
         self.scale_max = SCALE_MAX
         self.normalize = normalize
@@ -172,7 +173,7 @@ class VimeoDataset(BaseDataset):
             self.imgs = data_dict["train"] if train_mode else data_dict["val"]
 
         self.crop_size = crop_size
-        self.images_dim = (3, self.crop_size, self.crop_size)
+        self.image_dims = (3, self.crop_size, self.crop_size)
         self.scale_min = SCALE_MIN
         self.scale_max = SCALE_MAX
         self.normalize = normalize
@@ -244,11 +245,12 @@ def get_dataloader(dataset, train_mode=True, json_path=None, shuffle=True, pin_m
     """
 
     pin_memory = pin_memory and torch.cuda.is_available()  # Only set pin_memory True if GPU is available
+    Dataset = get_dataset(dataset)
 
     if json_path is None:
-        image_dataset = dataset(logger=logger, train_mode=train_mode, normalize=normalize, **kwargs)
+        image_dataset = Dataset(logger=logger, train_mode=train_mode, normalize=normalize, **kwargs)
     else:
-        image_dataset = dataset(json_path=json_path, logger=logger, train_mode=train_mode, normalize=normalize, **kwargs)
+        image_dataset = Dataset(json_path=json_path, logger=logger, train_mode=train_mode, normalize=normalize, **kwargs)
 
     return DataLoader(image_dataset,
                       batch_size=batch_size,

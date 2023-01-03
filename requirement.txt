@@ -4,3 +4,4 @@ tqdm
 pyyaml
 scikit-image
 autograd
+tensorboard

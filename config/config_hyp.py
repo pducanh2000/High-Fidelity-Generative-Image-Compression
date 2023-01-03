@@ -43,6 +43,9 @@ class args(object):
     kodak_dataset_path = DatasetPaths.KODAK
     vimeo_dataset = Datasets.VIMEO
     vimeo_dataset_path = DatasetPaths.VIMEO
+
+    dataset = Datasets.VIMEO
+    dataset_path = DatasetPaths.VIMEO
     shuffle = True
 
     # GAN params
