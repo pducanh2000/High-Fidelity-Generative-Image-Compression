@@ -220,7 +220,7 @@ class HIFICModel(nn.Module):
             x_gen = (x_gen + 1.0) / 2
 
         distortion_loss = self.distortion_loss(x_gen=x_gen, x_real=x_real)
-        perceptual_loss = self.perceptual_loss(pred=x_gen, target=x_real, normalize=True)
+        perceptual_loss = self.perceptual_loss_wrapper(x_gen, x_real, normalize=True)
 
         weighted_distortion = self.args.k_M * distortion_loss
         weighted_perceptual = self.args.k_P * perceptual_loss

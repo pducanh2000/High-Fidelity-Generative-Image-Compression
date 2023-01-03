@@ -58,14 +58,14 @@ def test(args, model, epoch, idx, data, test_data, test_bpp, device, epoch_test_
         data = data.to(device, dtype=torch.float)
 
         losses, intermediates = model(data, return_intermediates=True, writeout=False)
-        utils.save_images(train_writer, model.step_counter, intermediates.input_image, intermediates.reconstructions,
+        utils.save_images(train_writer, model.step_counter, intermediates.input_image, intermediates.reconstruction,
                           fname=os.path.join(args.figures_save,
                                              "recon_epoch{}_idx{}_TRAIN_{:%Y_%m_%d_%H:%M}.jpg".format(
                                                  epoch, idx, datetime.datetime.now())))
 
         test_data = test_data.to(device, dtype=torch.float)
         losses, intermediates = model(test_data, return_intermediates=True, writeout=True)
-        utils.save_images(test_writer, model.step_counter, intermediates.input_image, intermediates.reconstructions,
+        utils.save_images(test_writer, model.step_counter, intermediates.input_image, intermediates.reconstruction,
                           fname=os.path.join(args.figures_save,
                                              "recon_epoch{}_idx{}_TRAIN_{:%Y_%m_%d_%H:%M}.jpg".format(
                                                  epoch, idx, datetime.datetime.now())))
@@ -140,7 +140,7 @@ def train(args, model, train_loader, test_loader, device, logger, optimizers):
                 else:
                     return model, None
 
-            if model.step_counter % args.log_iterval == 1:
+            if model.step_counter % args.log_interval == 1:
                 epoch_loss.append(compression_loss.item())
                 mean_epoch_loss = np.mean(epoch_loss)
 
@@ -149,10 +149,10 @@ def train(args, model, train_loader, test_loader, device, logger, optimizers):
                                       avg_bpp=bpp.mean().item(), logger=logger, writer=train_writer)
 
             try:
-                test_data, test_bpp = test_loader_iter.next()
+                test_data, test_bpp = next(test_loader_iter)
             except StopIteration:
                 test_loader_iter = iter(test_loader)
-                test_data, test_bpp = test_loader_iter.next()
+                test_data, test_bpp = next(test_loader_iter)
 
             best_test_loss, epoch_test_loss = test(args, model, epoch, idx, data, test_data, test_bpp, device,
                                                    epoch_test_loss, storage_test,
