@@ -8,7 +8,7 @@ from collections import defaultdict
 import torch
 from torch.utils.tensorboard import SummaryWriter
 import numpy as np
-from tqdm.notebook import trange, tqdm
+from tqdm.notebook import tqdm
 
 from src.models.hific.model import HIFICModel
 from src.helpers import utils
@@ -96,7 +96,7 @@ def train(args, model, train_loader, test_loader, device, logger, optimizers):
     if model.use_discriminator:
         disc_opt = optimizers["disc"]
 
-    for epoch in trange(args.n_epochs):
+    for epoch in tqdm(args.n_epochs):
         epoch_loss, epoch_test_loss = [], []
         epoch_start_time = time.time()
 
@@ -105,7 +105,7 @@ def train(args, model, train_loader, test_loader, device, logger, optimizers):
 
         model.train()
 
-        for idx, (data, bpp) in enumerate(tqdm(train_loader), 0):
+        for idx, (data, bpp) in tqdm(enumerate(train_loader, 0)):
             data = data.to(device, dtype=torch.float)
             try:
                 if model.use_discriminator:
